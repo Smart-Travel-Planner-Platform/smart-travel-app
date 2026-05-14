@@ -4,5 +4,5 @@ import com.smarttravel.observer.WeatherObserver;
 
 public class PieChartPanel implements WeatherObserver {
     @Override
-    public void updateWeather() { }
+    public void update() { }
 }
