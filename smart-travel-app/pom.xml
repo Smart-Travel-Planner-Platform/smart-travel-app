@@ -6,6 +6,11 @@
     <groupId>com.smarttravel</groupId>
     <artifactId>smart-travel-app</artifactId>
     <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+    </properties>
     <dependencies>
         <!-- Add Jackson/Gson, JavaFX etc. here -->
         <dependency>
