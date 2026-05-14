@@ -1,14 +1,23 @@
 [
-    {
-        "name": "Istanbul",
-        "population": 15000000,
-        "area": 5461.0,
-        "temperature": 20.5
-    },
-    {
-        "name": "Ankara",
-        "population": 5000000,
-        "area": 2516.0,
-        "temperature": 15.0
-    }
+  {
+    "name": "Ankara",
+    "population": 5317215,
+    "area": 25615.0,
+    "currentTemperature": 20.5,
+    "currentWeatherState": "SUNNY"
+  },
+  {
+    "name": "Istanbul",
+    "population": 15715958,
+    "area": 5343.0,
+    "currentTemperature": 18.0,
+    "currentWeatherState": "CLOUDY"
+  },
+  {
+    "name": "Erzurum",
+    "population": 758279,
+    "area": 25005.0,
+    "currentTemperature": -5.5,
+    "currentWeatherState": "SNOWY"
+  }
 ]
