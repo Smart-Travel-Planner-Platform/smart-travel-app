@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Istanbul",
+        "population": 15000000,
+        "area": 5461.0,
+        "temperature": 20.5
+    },
+    {
+        "name": "Ankara",
+        "population": 5000000,
+        "area": 2516.0,
+        "temperature": 15.0
+    }
+]
