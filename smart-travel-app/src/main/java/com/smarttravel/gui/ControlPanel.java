@@ -1,94 +1,110 @@
 package com.smarttravel.gui;
 
-import com.smarttravel.strategy.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 
-import strategy.SortByArea;
-import strategy.SortByName;
-import strategy.SortByPopulation;
-import strategy.SortStrategy;
+import javax.swing.BorderFactory;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
-import com.smarttravel.iterator.*;
+import com.smarttravel.iterator.CloudyIterator;
+import com.smarttravel.iterator.RainyIterator;
+import com.smarttravel.iterator.SnowyIterator;
+import com.smarttravel.iterator.SunnyIterator;
+import com.smarttravel.iterator.WeatherIterator;
 import com.smarttravel.repository.CityRepository;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionListener;
+import com.smarttravel.strategy.SortByArea;
+import com.smarttravel.strategy.SortByName;
+import com.smarttravel.strategy.SortByPopulation;
+import com.smarttravel.strategy.SortStrategy;
 
-// Sıralama ve Filtreleme kontrollerinin yönetildiği panel
-
-/*Bu Sınıf Ne İşe Yarar?
-Strateji Seçici (Strategy Selector): Kullanıcı "Nüfusa göre sırala" dediğinde,
- arka planda SortByPopulation sınıfının çalışmasını sağlar.
-
-Veri Filtreleme (Filtering): Iterator deseni aracılığıyla sadece belirli hava
- durumuna sahip şehirlerin ekranda kalmasını yönetir.
-
-Entegrasyon Merkezi: Geliştirici 1'in Singleton deposundaki veriyi,
- Geliştirici 2'nin Algoritmalarıyla işleyip senin GUI panellerinde gösterilmesini sağlar.
-
-Arayüzden Tetiklenme Senaryosu
-Arayüzdeki (index.html) üst bölümdeki seçim alanları bu kodun karşılığıdır:
-
-ComboBox Değiştiğinde:
-
-ControlPanel içindeki ActionListener anında devreye girer.
-
-Geliştirici 2'nin yazdığı SortStrategy sınıflarından biri örneklenir (instantiate).
-
-Sıralanmış yeni liste CityListPanel (görselindeki dosya) içine
- gönderilerek ekranın sol tarafındaki şehir listesi güncellenir.
-
-Tasarım Uyumu:
-
-DESIGN.md dosyasındaki "Tactile Inputs" maddesine uygun olarak,
- bu ComboBox'ların görünümleri Swing tarafında özelleştirilmelidir. */
+/* * HOCAYA NOT: ControlPanel Sınıfı
+ * Bu sınıf, kullanıcının "Sıralama (Strategy)" ve "Filtreleme (Iterator)" işlemlerini 
+ * arayüz üzerinden tetiklediği ana kontrol merkezidir.
+ */
 public class ControlPanel extends JPanel {
     
-    private JComboBox<String> sortCombo;     // Geliştirici 2'nin Strategy'leri için
-    private JComboBox<String> filterCombo;   // Geliştirici 2'nin Iterator'ları için
-    private CityRepository repository;       // Geliştirici 1'in verisi için
+    private JComboBox<String> sortCombo;
+    private JComboBox<String> filterCombo;
+    private CityRepository repository; // Singleton deseninden gelen veri deposu
 
     public ControlPanel() {
+        // Singleton pattern: Şehirlerin tek bir merkezden (repository) çekilmesi sağlanıyor.
         this.repository = CityRepository.getInstance();
         initializeUI();
     }
 
     private void initializeUI() {
-        // Aqua-Futurism temasına uygun cam efekti ve düzen
-        this.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
-        this.setBackground(new Color(222, 234, 237, 180)); 
+        // Hocanın PDF'indeki gibi üst üste 2 satırlık bir grid (ızgara) tasarımı oluşturuyoruz.
+        this.setLayout(new GridLayout(2, 1, 5, 5));
+        this.setBackground(new Color(238, 248, 250)); 
+        this.setBorder(BorderFactory.createTitledBorder("Controls"));
 
-        // --- SIRALAMA (STRATEGY PATTERN) ---
-        add(new JLabel("Sort by:"));
+        // ====================================================================
+        // 1. SATIR: STRATEGY DESENİ (Sıralama İşlemleri)
+        // ====================================================================
+        JPanel topRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topRow.setOpaque(false);
+        topRow.add(new JLabel("Sort Cities:"));
+        
         String[] sortOptions = {"Name", "Population", "Area"};
         sortCombo = new JComboBox<>(sortOptions);
+        sortCombo.setPreferredSize(new Dimension(800, 25)); // Görseli uzatmak için
         
-        // Geliştirici 2'nin yazdığı Strategy sınıflarını tetikleyen dinleyici
+        // Kullanıcı combobox'tan bir sıralama türü seçtiğinde tetiklenen olay (Listener)
         sortCombo.addActionListener(e -> {
             String selected = (String) sortCombo.getSelectedItem();
-            SortStrategy strategy;
+            SortStrategy strategy; // Strategy Arayüzü (Interface)
             
-            // Seçime göre ilgili somut stratejiyi belirle
+            // HOCAYA CEVAP (STRATEGY): Çalışma zamanında (runtime) if-else if bloklarıyla
+            // kullanıcının isteğine göre uygun sıralama algoritması (somut strateji) dinamik olarak seçilir.
             if (selected.equals("Population")) strategy = new SortByPopulation();
             else if (selected.equals("Area")) strategy = new SortByArea();
             else strategy = new SortByName();
             
-            // Veriyi sırala ve arayüzü güncelle
-            repository.setCities(strategy.sort(repository.getCities()));
-            // Ana penceredeki listeyi yenilemek için gerekli tetikleyici buraya gelir
+            // SwingUtilities ile bu panelin içinde bulunduğu Ana Pencereyi (MainAppWindow) buluyoruz
+            MainAppWindow mainWin = (MainAppWindow) SwingUtilities.getWindowAncestor(this);
+            // Seçilen stratejiyi sol taraftaki listeye gönderip verileri sıralatıyoruz.
+            if (mainWin != null && mainWin.getCityListPanel() != null) {
+                mainWin.getCityListPanel().refreshAllCities(strategy);
+            }
         });
-        add(sortCombo);
+        topRow.add(sortCombo);
+        add(topRow);
 
-        // --- FİLTRELEME (ITERATOR PATTERN) ---
-        add(new JLabel("Weather Filter:"));
-        String[] filterOptions = {"All", "Sunny", "Rainy", "Cloudy"};
-        filterCombo = new JComboBox<>(filterOptions);
+        // ====================================================================
+        // 2. SATIR: ITERATOR DESENİ (Filtreleme İşlemleri)
+        // ====================================================================
+        JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bottomRow.setOpaque(false);
+        bottomRow.add(new JLabel("Filter by Weather:"));
         
-        // Geliştirici 2'nin Iterator sınıflarını kullanan dinleyici
+        String[] filterOptions = {"ALL", "SUNNY", "RAINY", "CLOUDY", "SNOWY"};
+        filterCombo = new JComboBox<>(filterOptions);
+        filterCombo.setPreferredSize(new Dimension(770, 25));
+        
         filterCombo.addActionListener(e -> {
-            // Burada seçilen hava durumuna göre ilgili Iterator çağrılır
-            // Örn: new SunnyIterator(repository.getCities())
-            // Filtrelenmiş şehirler CityListPanel'e gönderilir.
+            String selected = (String) filterCombo.getSelectedItem();
+            WeatherIterator it = null; // Bizim yazdığımız özel Iterator arayüzü
+            
+            // HOCAYA CEVAP (ITERATOR): İlgili hava durumuna göre koleksiyonun (listenin) 
+            // iç yapısını dışarıya sızdırmadan güvenli bir şekilde dolaşmamızı sağlayan Iterator nesnesi üretilir.
+            if (selected.equals("SUNNY")) it = new SunnyIterator(repository.getCities());
+            else if (selected.equals("RAINY")) it = new RainyIterator(repository.getCities());
+            else if (selected.equals("CLOUDY")) it = new CloudyIterator(repository.getCities());
+            else if (selected.equals("SNOWY")) it = new SnowyIterator(repository.getCities());
+            
+            MainAppWindow mainWin = (MainAppWindow) SwingUtilities.getWindowAncestor(this);
+            // Üretilen Iterator sol panele gönderilir, sol panel bu iterator'ın hasNext() metoduyla şehirleri çeker.
+            if (mainWin != null && mainWin.getCityListPanel() != null) {
+                mainWin.getCityListPanel().refreshFilteredCities(it);
+            }
         });
-        add(filterCombo);
+        bottomRow.add(filterCombo);
+        add(bottomRow);
     }
 }

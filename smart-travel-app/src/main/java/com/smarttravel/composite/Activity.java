@@ -61,4 +61,9 @@ public class Activity implements TravelComponent {
         String indent = "  ".repeat(indentLevel);
         System.out.println(indent + "- " + name + " (Cost: " + cost + ", Duration: " + duration + "h)");
     }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
 }

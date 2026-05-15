@@ -83,4 +83,28 @@ public class ActivityPlan implements TravelComponent {
             child.displayPlan(indentLevel + 1);
         }
     }
+
+    @Override
+    public String getName() {
+        return planName;
+    }
+
+    // Command (Undo/Redo) sınıflarının listeye erişebilmesi için
+    public List<TravelComponent> getComponents() {
+        return components;
+    }
+
+    // Listeyi tek tuşla temizleyebilmek için
+    public void clearAll() {
+        components.clear();
+    }
+
+    // MoveActivityCommand (Aktivite taşıma) işlemleri için gereken yardımcı metotlar
+    public TravelComponent getComponent(int index) {
+        return components.get(index);
+    }
+
+    public void addComponentAt(int index, TravelComponent component) {
+        components.add(index, component);
+    }
 }

@@ -37,51 +37,68 @@ Bu değişim, index.html dosyasındaki statik grafik görüntüsünün Java
  tarafındaki canlı versiyonudur. */
 public class BarChartPanel extends JPanel implements WeatherObserver {
     
-    // Grafiğin çizilebilmesi için şehir verilerine erişim sağlar
     private CityRepository repository;
 
     public BarChartPanel() {
-        this.repository = CityRepository.getInstance(); // Singleton üzerinden veriyi al
+        this.repository = CityRepository.getInstance(); 
         this.setPreferredSize(new Dimension(400, 300));
-        this.setBackground(new Color(238, 248, 250, 100)); // Aqua-Futurism cam efekti
+        
+        // GLITCH ÇÖZÜMÜ VE MOCK-UP UYUMU: 
+        // Şeffaflığı (100) kaldırdık ve hocanın ekranındaki gibi beyaz/açık gri bir arka plan yaptık.
+        // Ayrıca panelin sol üst köşesine hocanın PDF'indeki gibi "City Temperatures" başlığını ekledik.
+        this.setBackground(Color.WHITE); 
+        this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     }
 
-    // Geliştirici 1'in Thread mekanizması çalıştığında bu metod tetiklenir
     @Override
     public void update() {
-        // Veri değiştiği için paneli yeniden çizdirir
+        // HOCAYA CEVAP (OBSERVER): Subject (Motor) veri değiştirdiğinde 
+        // bu panelin kendini anında yeni verilerle tekrar çizmesini sağlar.
         repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
+        // Ekranın önceki karelerini (frame) temizleyen çok kritik metot
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        // Kenar yumuşatma aktif (Daha modern bir görünüm için)
+        
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        List<City> cities = repository.getCities();
-        int x = 50; // Başlangıç X koordinatı
-        int width = 30; // Bar genişliği
+        // HOCAYA NOT: Sol üstteki başlık yazısı
+        g2d.setColor(Color.BLACK);
+        g2d.drawString("City Temperatures", 10, 15);
 
-        // Her bir şehir için sıcaklık değerine göre bir bar (çubuk) çizer
+        List<City> cities = repository.getCities();
+        if (cities == null || cities.isEmpty()) return;
+
+        int x = 20; // Başlangıç X koordinatını biraz daha sola çektik
+        int width = 35; // Çubukları biraz kalınlaştırdık
+
+        // Her bir şehir için iterasyon yapıp grafiği çizdiriyoruz
         for (City city : cities) {
-            int height = (int) city.getCurrentTemperature() * 3; // Sıcaklığı görsel
-            //  boyuta çevir
+            // Çubuk yüksekliğini sıcaklıkla orantılı yapıyoruz
+            int height = (int) (city.getCurrentTemperature() * 4); 
+            // Çizim çok aşağı taşmasın diye bir sınır (limit) koyuyoruz
+            if (height < 0) height = 0; 
             
-            // Aqua-Futurism temasına uygun degrade renk (Cyan to Blue)
-            GradientPaint gp = new GradientPaint(x, 250 - height, new Color(0, 101, 111), 
-                                                x, 250, new Color(131, 240, 255));
-            g2d.setPaint(gp);
+            // MOCK-UP UYUMU: Hocanın PDF'indeki (Figure 1) kırmızımsı çubuk rengi 
+            g2d.setColor(new Color(255, 102, 102)); 
+            g2d.fillRect(x, 270 - height, width, height);
             
-            // Barı çiz (Yukarıdan aşağı koordinat sistemine göre ayarlı)
-            g2d.fillRect(x, 250 - height, width, height);
+            // MOCK-UP UYUMU: Çubukların hemen üstüne sıcaklık sayısını yazdır 
+            g2d.setColor(Color.BLACK);
+            g2d.setFont(new Font("Arial", Font.BOLD, 10));
+            g2d.drawString(String.format("%.1f", city.getCurrentTemperature()), x + 2, 270 - height - 5);
             
-            // Şehir isimlerini barın altına yaz
-            g2d.setColor(new Color(39, 48, 50));
-            g2d.drawString(city.getName(), x, 270);
+            // Şehir isimlerini barın altına yazdır (Sığması için ilk 5-6 harfini alıp kısaltıyoruz)
+            g2d.setColor(Color.DARK_GRAY);
+            g2d.setFont(new Font("Arial", Font.PLAIN, 10));
+            String cityName = city.getName();
+            if(cityName.length() > 6) cityName = cityName.substring(0, 5) + "..";
+            g2d.drawString(cityName, x, 285);
             
-            x += 60; // Bir sonraki bar için boşluk bırak
+            x += 50; // Bir sonraki bar için boşluk (X koordinatını kaydır)
         }
     }
 }

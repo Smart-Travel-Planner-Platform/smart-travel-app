@@ -42,4 +42,6 @@ public interface TravelComponent {
      * @param indentLevel: Girinti seviyesi. İç içe yapılarda ne kadar sağa kaydırılacağını belirler.
      */
     void displayPlan(int indentLevel);/*Planı görselleştirirken kullanılır */
+    /** Bileşenin (Plan veya Aktivite) ismini döndürür */
+    String getName();
 }

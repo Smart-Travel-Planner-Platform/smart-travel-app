@@ -1,7 +1,7 @@
-package com.smarttravel.patterns.command;
+package com.smarttravel.command;
 
-import com.smarttravel.patterns.composite.ActivityPlan;
-import com.smarttravel.patterns.composite.TravelComponent;
+import com.smarttravel.composite.ActivityPlan;
+import com.smarttravel.composite.TravelComponent;
 import java.util.ArrayList;
 import java.util.List;
 

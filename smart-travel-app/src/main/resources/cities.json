@@ -3,21 +3,77 @@
     "name": "Ankara",
     "population": 5317215,
     "area": 25615.0,
-    "currentTemperature": 20.5,
+    "currentTemperature": 15.0,
     "currentWeatherState": "SUNNY"
   },
   {
-    "name": "Istanbul",
-    "population": 15715958,
-    "area": 5343.0,
-    "currentTemperature": 18.0,
+    "name": "Buhara",
+    "population": 280000,
+    "area": 143.1,
+    "currentTemperature": 22.2,
     "currentWeatherState": "CLOUDY"
   },
   {
-    "name": "Erzurum",
-    "population": 758279,
-    "area": 25005.0,
-    "currentTemperature": -5.5,
+    "name": "Gaziantep",
+    "population": 1835508,
+    "area": 6778.9,
+    "currentTemperature": -4.7,
+    "currentWeatherState": "SUNNY"
+  },
+  {
+    "name": "Gazze",
+    "population": 2180400,
+    "area": 70.9,
+    "currentTemperature": 40.0,
+    "currentWeatherState": "SNOWY"
+  },
+  {
+    "name": "Isfahan",
+    "population": 2243249,
+    "area": 551.6,
+    "currentTemperature": 26.2,
+    "currentWeatherState": "RAINY"
+  },
+  {
+    "name": "Islamabad",
+    "population": 1108872,
+    "area": 906.6,
+    "currentTemperature": 26.5,
+    "currentWeatherState": "CLOUDY"
+  },
+  {
+    "name": "Istanbul",
+    "population": 15719600,
+    "area": 5343.0,
+    "currentTemperature": 34.3,
+    "currentWeatherState": "SNOWY"
+  },
+  {
+    "name": "Kudus",
+    "population": 981711,
+    "area": 126.0,
+    "currentTemperature": 26.2,
+    "currentWeatherState": "CLOUDY"
+  },
+  {
+    "name": "Saraybosna",
+    "population": 347000,
+    "area": 141.6,
+    "currentTemperature": 36.8,
+    "currentWeatherState": "RAINY"
+  },
+  {
+    "name": "Uskup",
+    "population": 526502,
+    "area": 571.6,
+    "currentTemperature": 21.8,
+    "currentWeatherState": "CLOUDY"
+  },
+  {
+    "name": "Sam",
+    "population": 2132100,
+    "area": 190.1,
+    "currentTemperature": 33.3,
     "currentWeatherState": "SNOWY"
   }
 ]

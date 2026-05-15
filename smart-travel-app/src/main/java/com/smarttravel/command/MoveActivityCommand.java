@@ -1,7 +1,7 @@
-package com.smarttravel.patterns.command;
+package com.smarttravel.command;
 
-import com.smarttravel.patterns.composite.ActivityPlan;
-import com.smarttravel.patterns.composite.ActivityComponent;
+import com.smarttravel.composite.ActivityPlan;
+import com.smarttravel.composite.TravelComponent;
 /*Bu dosya, Command Pattern arayüzünü uygular ve listenin sırasını
  değiştirirken "Undo" (Geri Al) işlemini mümkün kılar. */
 
@@ -72,7 +72,7 @@ public class MoveActivityCommand implements Command {
     // Listede kaydırma işlemini yapan yardımcı metod
     private void move(int from, int to) {
         // İlgili indisteki aktivite bileşenini bulur
-        ActivityComponent component = plan.getComponent(from);
+        TravelComponent component = plan.getComponent(from);
         // Önce eski yerinden siler
         plan.removeComponent(component);
         // Sonra yeni hedeflenen sıraya yerleştirir

@@ -1,6 +1,5 @@
 package com.smarttravel.gui;
 
-import com.smarttravel.repository.CityRepository;
 import com.smarttravel.observer.WeatherReportProvider;
 import javax.swing.*;
 import java.awt.*;
@@ -40,55 +39,60 @@ DESIGN.md dosyasındaki "Glass-Panel" efekti,
  Swing'de opaklığı ayarlanmış (rgba) arka plan renkleriyle bu sınıfta taklit edilir. */
 public class MainAppWindow extends JFrame {
 
-    // Senin yazdığın alt paneller
     private ControlPanel controlPanel;
     private BarChartPanel chartPanel;
     private PlannerPanel plannerPanel;
     private CityListPanel cityListPanel;
 
-    public MainAppWindow() {
-        // Pencere temel ayarları
+    public MainAppWindow(WeatherReportProvider weatherProvider) {
         setTitle("Smart Travel Planner - Aqua Futurism");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // Ekranın ortasında aç
+        setLocationRelativeTo(null); 
         
-        // Tasarım dokümanındaki "Sunlit Abyss" arka plan rengi
         getContentPane().setBackground(new Color(238, 248, 250));
-        setLayout(new BorderLayout(10, 10));
-
-        initializeComponents();
+        setLayout(new BorderLayout(10, 10)); // Ekranı Kuzey, Güney, Doğu, Batı, Merkez olarak böler
+        
+        initializeComponents(weatherProvider);
     }
 
-    private void initializeComponents() {
-        // 1. Üst Kısım: Kontrol Paneli (Sıralama ve Filtreleme)
+    private void initializeComponents(WeatherReportProvider weatherProvider) {
+        // Üst panel (Strategy ve Iterator komutlarını içerir)
         controlPanel = new ControlPanel();
         add(controlPanel, BorderLayout.NORTH);
-
-        // 2. Sol Kısım: Şehir Listesi
+        
+        // Sol panel (Şehirlerin listelendiği yer)
         cityListPanel = new CityListPanel();
         add(new JScrollPane(cityListPanel), BorderLayout.WEST);
-
-        // 3. Orta/Sağ Kısım: Seyahat Planı (Composite Yapısı)
+        
+        // Orta ve Sağ panel (Aktivitelerin eklendiği Composite ve Command merkezi)
         plannerPanel = new PlannerPanel();
         add(new JScrollPane(plannerPanel), BorderLayout.CENTER);
-
-        // 4. Alt Kısım: Grafik Paneli (Observer Yapısı)
+        
+        // Alt panel (Observer deseninin dinleyici grafikleri)
+        JPanel chartsPanel = new JPanel(new GridLayout(1, 2, 10, 0)); 
         chartPanel = new BarChartPanel();
-        add(chartPanel, BorderLayout.SOUTH);
-
-        // --- KRİTİK BAĞLANTI (Observer) ---
-        // Geliştirici 1'in yazdığı sisteme grafik panelini "dinleyici" olarak ekle
-        WeatherReportProvider.getInstance().attach(chartPanel);
+        PieChartPanel pieChartPanel = new PieChartPanel();
+        
+        chartsPanel.add(chartPanel);
+        chartsPanel.add(pieChartPanel);
+        add(chartsPanel, BorderLayout.SOUTH);
+        
+        // SINAV NOTU (OBSERVER DESENİ):
+        // Motor (Subject), grafiklere (Observer) bağlanır. 
+        // Böylece hava durumu değiştiğinde grafikler otomatik haberdar olur (Loose Coupling - Gevşek Bağlılık).
+        weatherProvider.attach(chartPanel);
+        weatherProvider.attach(pieChartPanel);
     }
 
-    public static void main(String[] args) {
-        // Uygulamayı başlatırken Singleton Repository'yi tetikle
-        CityRepository.getInstance(); 
+    // SINAV NOTU (ENCAPSULATION - KAPSULLEME):
+    // Diğer panellerin MainAppWindow içindeki değişkenlere doğrudan (public) erişmesini engelleriz.
+    // Sadece getter metotlarıyla kontrollü bir erişim sağlarız.
+    public CityListPanel getCityListPanel() {
+        return cityListPanel;
+    }
 
-        // Arayüzü oluştur ve görünür yap
-        SwingUtilities.invokeLater(() -> {
-            new MainAppWindow().setVisible(true);
-        });
+    public PlannerPanel getPlannerPanel() {
+        return plannerPanel;
     }
 }
