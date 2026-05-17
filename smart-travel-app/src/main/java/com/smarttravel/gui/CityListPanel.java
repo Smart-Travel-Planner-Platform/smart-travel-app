@@ -61,12 +61,24 @@ public class CityListPanel extends JPanel {
                         String selectedText = sourceList.getSelectedValue();
                         String cityName = selectedText.split(" \\(")[0];
 
+                        // --- EKLENEN KISIM BAŞLANGICI ---
+                        // Şehrin sadece ismini değil, tüm verilerini (City nesnesini) almak için Repository'de arıyoruz
+                        City selectedCityObj = null;
+                        for (City c : CityRepository.getInstance().getCities()) {
+                            if (c.getName().equals(cityName)) {
+                                selectedCityObj = c;
+                                break;
+                            }
+                        }
+                        // --- EKLENEN KISIM BİTİŞİ ---
+
                         // SINAV NOTU (SWING UTILITIES):
                         // CityListPanel, PlannerPanel'i doğrudan tanımaz. Önce ikisinin de babası olan
                         // MainAppWindow'u bulur, oradan PlannerPanel'e ulaşıp "Aktif şehri değiştir" emrini verir.
                         MainAppWindow mainWin = (MainAppWindow) SwingUtilities.getWindowAncestor(CityListPanel.this);
-                        if (mainWin != null && mainWin.getPlannerPanel() != null) {
-                            mainWin.getPlannerPanel().setActiveCity(cityName);
+                        if (mainWin != null && mainWin.getPlannerPanel() != null && selectedCityObj != null) {
+                            // --- DEĞİŞTİRİLEN KISIM: Artık String değil, City nesnesini yolluyoruz ---
+                            mainWin.getPlannerPanel().setActiveCity(selectedCityObj);
                         }
                     }
                 }
@@ -78,6 +90,7 @@ public class CityListPanel extends JPanel {
         filteredCitiesList.addListSelectionListener(selectionListener);
 
         refreshAllCities(null); 
+        refreshFilteredCities(null);
     }
 
     public void refreshAllCities(SortStrategy strategy) {
