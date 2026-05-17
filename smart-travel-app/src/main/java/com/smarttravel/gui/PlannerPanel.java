@@ -114,6 +114,62 @@ public class PlannerPanel extends JPanel {
         pnlCustom.add(new JLabel("Hours:")); txtHours = new JTextField(4); pnlCustom.add(txtHours);
         btnAddCustom = new JButton("Add Custom Activity Option"); pnlCustom.add(btnAddCustom);
 
+        // =====================================================================================
+        // --- CUSTOM ACTIVITY ENTEGRASYONU (KULLANICININ KENDİ GİRDİĞİ AKTİVİTELER) ---
+        // =====================================================================================
+        btnAddCustom.addActionListener(e -> {
+            if (activePlan == null) {
+                JOptionPane.showMessageDialog(this, "Please select a city first!", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try {
+                // Kullanıcının girdiği metinleri al ve sayılara dönüştür
+                String label = txtLabel.getText().trim();
+                double cost = Double.parseDouble(txtCost.getText().trim());
+                double hours = Double.parseDouble(txtHours.getText().trim());
+
+                if (label.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Please enter a valid activity label!", "Warning", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                // Hedef klasörü bul (Seçili klasör yoksa ana Root plana ekler)
+                ActivityPlan targetPlan = activePlan;
+                DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) activityTree.getLastSelectedPathComponent();
+                if (selectedNode != null && selectedNode != rootTreeNode) {
+                    Object userObj = selectedNode.getUserObject();
+                    if (userObj instanceof ComponentNodeWrapper) {
+                        TravelComponent comp = ((ComponentNodeWrapper) userObj).getComponent();
+                        if (comp instanceof ActivityPlan) {
+                            targetPlan = (ActivityPlan) comp;
+                        } else {
+                            // Eğer seçilen şey bir klasör değil de alt aktiviteyse, onun bulunduğu klasörü hedef al
+                            DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+                            if (parentNode != null && parentNode != rootTreeNode) {
+                                targetPlan = (ActivityPlan) ((ComponentNodeWrapper) parentNode.getUserObject()).getComponent();
+                            }
+                        }
+                    }
+                }
+
+                // Yeni özel aktivitemizi oluştur ve CommandManager ile ağaca ekle
+                commandManager.executeCommand(new AddActivityCommand(targetPlan, new Activity(label, cost, hours)));
+
+                // İşlem başarılı olduktan sonra metin kutularını temizle
+                txtLabel.setText("");
+                txtCost.setText("");
+                txtHours.setText("");
+
+                // Ekranı güncelle
+                refreshTreeUI();
+
+            } catch (NumberFormatException ex) {
+                // Eğer kullanıcı Cost veya Hours kısmına harf girerse uygulamanın çökmesini engelle
+                JOptionPane.showMessageDialog(this, "Please enter valid numbers for Cost and Hours!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
         JPanel topHalf = new JPanel(new BorderLayout());
         topHalf.add(pnlActivities, BorderLayout.NORTH);
         topHalf.add(pnlCustom, BorderLayout.SOUTH);
@@ -133,16 +189,13 @@ public class PlannerPanel extends JPanel {
         middleCol.add(pnlAddBtn, BorderLayout.SOUTH);
         add(middleCol);
 
-        // SINAV NOTU (COMMAND DESENİ - DINAMIK EKLEME):
-        // Kullanıcı ekle butonuna bastığında aktiviteler ağaçta o an hangi composite (klasör) 
-        // seçiliyse onun altına eklenir. Hiçbir şey seçilmediyse Root'a eklenir.
+        // Normal aktiviteleri ekleme butonu
         btnAddSelected.addActionListener(e -> {
             if (activePlan == null) {
                 JOptionPane.showMessageDialog(this, "Please select a city first!", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            // Adım 1: Eklenecek hedef klasörü (Composite düğümü) buluyoruz
             ActivityPlan targetPlan = activePlan;
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) activityTree.getLastSelectedPathComponent();
             if (selectedNode != null && selectedNode != rootTreeNode) {
@@ -150,9 +203,8 @@ public class PlannerPanel extends JPanel {
                 if (userObj instanceof ComponentNodeWrapper) {
                     TravelComponent comp = ((ComponentNodeWrapper) userObj).getComponent();
                     if (comp instanceof ActivityPlan) {
-                        targetPlan = (ActivityPlan) comp; // Seçili düğüm bir klasörse hedef odur
+                        targetPlan = (ActivityPlan) comp; 
                     } else {
-                        // Eğer seçili düğüm bir yaprak aktiviteyse, onun bağlı olduğu üst klasörü hedef seç
                         DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
                         if (parentNode != null && parentNode != rootTreeNode) {
                             targetPlan = (ActivityPlan) ((ComponentNodeWrapper) parentNode.getUserObject()).getComponent();
@@ -161,7 +213,6 @@ public class PlannerPanel extends JPanel {
                 }
             }
 
-            // Adım 2: Seçili olan her aktiviteyi hedef klasöre Command ile ekle
             boolean added = false;
             if (chkMuseum.isSelected()) {
                 commandManager.executeCommand(new AddActivityCommand(targetPlan, new Activity("Visit Museum", 18.0, 2.0)));
