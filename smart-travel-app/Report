@@ -1,0 +1,58 @@
+PROJECT REPORT
+
+Taha Uğur Toyran 
+Subsystems & Implementation Details:
+
+•	System Integration & Architecture Setup: Acted as the lead integrator by successfully merging distinct modules, core pattern implementations, and GUI panels from all 
+team members into a single application. Designed the baseline data layer (com.smarttravel.model) by engineering the City domain class and WeatherState enum, featuring customized
+toString() formats to unlock synchronous team development. Developed the thread-safe CityRepository using the Singleton pattern, embedding automated Google Gson routines to load
+and buffer the static cities.json database into runtime memory.
+•	GUI Refinement & Advanced Bug Fixing: Spearheaded the final UI phase to deliver a polished "Aqua Futurism" experience. Fixed a critical synchronicity bug where the preview panel
+ stayed frozen on "Waiting for activities..." by architecting a centralized dynamic updating function (updatePreviewText) bound to all activity checkboxes. Integrated the missing 
+ sub-total display label (lblPreviewTotal) to instantly reflect dynamic duration and costs. Resolved the initial startup synchronization flaw within CityListPanel by appending
+  a proactive refresh call in the constructor, forcing the filtered city list to populate correctly at launch.
+•	Data Refactoring & Command Pattern Completion: Refactored state communications by transitioning the active city from a primitive String identifier into a robust, 
+object-oriented City model via PlannerPanel.setActiveCity(City city), granting the component polymorphic access to real-time city metrics. Fully finalized the incomplete 
+Command pattern infrastructure by transforming the non-functional Redo button into an active user option; wired the appropriate ActionListener to the CommandManager (Invoker) to support
+ robust, multi-stack Undo/Redo operations across complex UI interactions.
+•	Build Deployment & Git DevOps Management: Managed the comprehensive project lifecycle and deployment strategy using Apache Maven. Programmed the complex pom.xml
+build scripts to handle cross-platform asset compilation, successfully packaging the codebase into a standalone, executable Fat JAR. Established strict Git protocols by isolating 
+features within a dedicated dev branch, and successfully resolved a deployment crisis involving GitHub protected branch hooks and conflicting timelines (unrelated histories) 
+by strategically shifting clean branch states directly into production (git checkout dev -- .).
+
+Rabia Sude Karakoç
+Subsystems & Implementation Details:
+
+•	Strategy Design Pattern Framework: Engineered the extensible architectural sorting framework under the com.smarttravel.strategy ecosystem to cleanly decouple sorting algorithms 
+from the main application logic. Designed the foundational SortStrategy abstract abstraction interface. Developed three concrete implementation classes—SortByName, SortByPopulation, 
+and SortByArea—utilizing Java’s native Comparator mechanisms and Collections.sort(). This design allows the platform to dynamically swap sorting criteria at runtime based on real-time 
+user selections within the combo box, satisfying the project's non-functional extensibility requirements. 
+•	Custom Iterator Architecture for Data Filtering: Designed and finalized the custom behavioral data streaming layer within the com.smarttravel.iterator package to filter geographic
+datasets dynamically. Developed the foundational WeatherIterator control interface defining sequential operations. Programmed four distinct concrete iterator 
+implementations—SunnyIterator, RainyIterator, CloudyIterator, and SnowyIterator. Configured their constructors to ingest the global city repository list and executed lookup pointer logic to iteratively skip elements that do not match the target meteorological state, enabling the GUI to execute seamless, pattern-driven conditional views. 
+•	Observer Pattern & Multi-Threaded Live Simulation: Conceptualized and built the complete Publisher-Subscriber (Observer) architecture to handle concurrent data streaming. 
+Designed the WeatherReportProvider as the core Subject that manages subscription hooks and dynamically broadcasts real-time updates to registered visual components. Implemented a background concurrency layer utilizing an independent worker thread running an infinite execution loop with controlled delays (Thread.sleep(3000)). This thread automatically mutates city weather states randomly every 3 seconds and invokes the notification chain, keeping the UI data-fresh without locking the primary user interface thread. 
+•	Live Analytics Dashboard Visualization: Spearheaded the development of the live graphical data processing layers. Implemented the dynamic Bar Chart components to monitor 
+live temperature fluctuations across the entire city database, and the Pie Chart panels to calculate and illustrate the percentage distribution of active weather states across 
+the ecosystem. Registered these analytical sub-panels as active concrete observers to the WeatherReportProvider, achieving fully automatic and seamless chart updates upon every 
+cycle of the background simulation thread.
+
+Karya Demirciler
+Subsystems & Implementation Details:
+
+•	Composite Design Pattern Architecture: Engineered the core hierarchical tree structures within the com.smarttravel.composite package to enable nested travel itinerary tracking. 
+Designed the fundamental structural abstraction TravelComponent defining core polymorphic operations for composite components. Programmed the Activity class to represent the individual 
+leaf nodes (encapsulating explicit cost and duration matrices extended by decorator wrappers). Developed the recursive ActivityPlan class as the central composite node , managing 
+internal arrays via component manipulation vectors (addComponent() / removeComponent()) and implementing recursive mathematical algorithms to automatically aggregate deep total costs 
+and total durations across complex, nested trip itineraries. 
+•	Behavioral Command Pattern Framework: Co-architected and laid the foundational behavioral logic infrastructure for user interaction tracking within the com.smarttravel.command 
+domain. Structured the behavioral execution interface Command mapping uniform execute() and undo() protocols. Developed the skeleton of concrete operational commands including 
+AddActivityCommand, RemoveActivityCommand, and ClearPlanCommand , configuring them to ingest explicit contextual parameters regarding active composite nodes (ActivityPlan) and 
+target components (Activity) to safely mutate or revert model states without direct GUI coupling. 
+•	Graphical User Interface Design & Panel Integration: Served as the primary visual interface designer for the desktop environment (com.smarttravel.gui). Built the structured 
+framework for the application's visual tree, establishing the main layout managers and visual sub-panels. Programmed the primary layout integration boundaries for the custom data 
+visualization components (ChartPanel), configuring them to cleanly handle live telemetry redraws upon receiving data-fresh observer notifications from the concurrent weather providers. 
+•	Inter-Module Behavioral Coupling: Programmed the necessary event-dispatching listeners to map visual GUI user controls directly to backend design pattern logic flows. Wired the 
+primary sorting combo box selections to dynamically instantiate and invoke the corresponding concrete SortStrategy instances. Mapped the primary "Add Selected Activities" interface 
+execution button to dynamically package UI states into concrete AddActivityCommand structures, successfully feeding them into the systemic command histories to guarantee pattern-driven 
+behavioral operations.
