@@ -1,6 +1,6 @@
 PROJECT REPORT
 
-Taha Uğur Toyran 
+Taha Uğur Toyran - 220201055
 Subsystems & Implementation Details:
 
 •	System Integration & Architecture Setup: Acted as the lead integrator by successfully merging distinct modules, core pattern implementations, and GUI panels from all 
@@ -20,7 +20,7 @@ build scripts to handle cross-platform asset compilation, successfully packaging
 features within a dedicated dev branch, and successfully resolved a deployment crisis involving GitHub protected branch hooks and conflicting timelines (unrelated histories) 
 by strategically shifting clean branch states directly into production (git checkout dev -- .).
 
-Rabia Sude Karakoç
+Rabia Sude Karakoç - 230204045
 Subsystems & Implementation Details:
 
 •	Strategy Design Pattern Framework: Engineered the extensible architectural sorting framework under the com.smarttravel.strategy ecosystem to cleanly decouple sorting algorithms 
@@ -37,7 +37,7 @@ live temperature fluctuations across the entire city database, and the Pie Chart
 the ecosystem. Registered these analytical sub-panels as active concrete observers to the WeatherReportProvider, achieving fully automatic and seamless chart updates upon every 
 cycle of the background simulation thread.
 
-Karya Demirciler
+Karya Demirciler - 220201050
 Subsystems & Implementation Details:
 
 •	Composite Design Pattern Architecture: Engineered the core hierarchical tree structures within the com.smarttravel.composite package to enable nested travel itinerary tracking. 
