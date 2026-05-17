@@ -2,7 +2,7 @@ package com.smarttravel.gui;
 
 import com.smarttravel.composite.*;
 import com.smarttravel.command.*;
-import com.smarttravel.model.City; // --- EKLENDİ: City modelini import ediyoruz ---
+import com.smarttravel.model.City;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -13,7 +13,7 @@ import java.util.Map;
 /*
  * SINAV NOTU (PLANNER PANEL - PROJENİN BEYNİ):
  * Bu sınıf hocanın en çok dikkat edeceği 3 tasarımı yönetir:
- * 1. COMPOSITE: JTree (Ağaç) yapısı ile ana klasörler ve içindeki yaprak aktiviteler.
+ * 1. COMPOSITE: JTree (Ağaç) yapısı ile ana klasörler ve içindeki yaprak aktiviteler recursive olarak çizilir.
  * 2. COMMAND: Undo, Redo, Move Up, Move Down, Remove gibi işlemlerin Command yöneticisiyle yapılması.
  * 3. HASHMAP MANTIĞI: Her şehrin kendine özel bir planının hafızada (RAM) tutulması.
  */
@@ -33,10 +33,8 @@ public class PlannerPanel extends JPanel {
     private Map<String, ActivityPlan> cityPlans;
     private ActivityPlan activePlan; // O an ekranda işlem yapılan şehrin planı
     
-    // --- EKLENEN KISIM BAŞLANGICI ---
     // Şehrin nüfus, alan ve hava durumu bilgilerini tutmak için City nesnesi
     private City currentCity; 
-    // --- EKLENEN KISIM BİTİŞİ ---
 
     // Arayüz elemanları
     private JCheckBox chkMuseum, chkCenter, chkShopping, chkPark;
@@ -45,11 +43,9 @@ public class PlannerPanel extends JPanel {
     private JButton btnAddSelected, btnAddCustom, btnAddPlanNode;
     private JButton btnRemove, btnMoveUp, btnMoveDown, btnClear, btnUndo, btnRedo;
 
-    // --- EKLENEN KISIM BAŞLANGICI ---
     // Alt toplam ve üst başlık etiketleri
     private JLabel lblPreviewTotal;
     private JLabel lblPreviewHeader;
-    // --- EKLENEN KISIM BİTİŞİ ---
 
     public PlannerPanel() {
         this.cityPlans = new HashMap<>();
@@ -59,7 +55,6 @@ public class PlannerPanel extends JPanel {
         createRightColumn();
     }
 
-    // --- DEĞİŞTİRİLEN KISIM BAŞLANGICI ---
     // SINAV NOTU (AKTİF ŞEHİR DEĞİŞİMİ):
     // Artık sadece isim (String) değil, seçilen City nesnesini komple alıyoruz.
     public void setActiveCity(City city) {
@@ -84,7 +79,6 @@ public class PlannerPanel extends JPanel {
         // Ekrandaki JTree ağacını yeni aktif şehre göre tekrar çizdir
         refreshTreeUI();
     }
-    // --- DEĞİŞTİRİLEN KISIM BİTİŞİ ---
 
     private void createMiddleColumn() {
         JPanel middleCol = new JPanel(new BorderLayout(5, 5));
@@ -92,10 +86,8 @@ public class PlannerPanel extends JPanel {
 
         JPanel pnlActivities = new JPanel(new GridLayout(6, 1));
         
-        // --- DEĞİŞTİRİLEN KISIM BAŞLANGICI ---
         lblPreviewHeader = new JLabel("Preview for Active City");
         pnlActivities.add(lblPreviewHeader);
-        // --- DEĞİŞTİRİLEN KISIM BİTİŞİ ---
         
         pnlActivities.add(new JLabel("Available Activities:"));
         
@@ -107,16 +99,14 @@ public class PlannerPanel extends JPanel {
         pnlActivities.add(chkMuseum); pnlActivities.add(chkCenter);
         pnlActivities.add(chkShopping); pnlActivities.add(chkPark);
 
-        // --- EKLENEN KISIM BAŞLANGICI ---
         // Checkbox'lara tıklanmasını dinleyen listener
         java.awt.event.ItemListener checkboxListener = e -> updatePreviewText();
         chkMuseum.addItemListener(checkboxListener);
         chkCenter.addItemListener(checkboxListener);
         chkShopping.addItemListener(checkboxListener);
         chkPark.addItemListener(checkboxListener);
-        // --- EKLENEN KISIM BİTİŞİ ---
 
-        // ... (Custom Activity text kutuları oluşturma kısmı)
+        // Custom Activity text kutuları oluşturma kısmı
         JPanel pnlCustom = new JPanel(new FlowLayout(FlowLayout.LEFT));
         pnlCustom.setBorder(BorderFactory.createTitledBorder("Add New Activity Option"));
         pnlCustom.add(new JLabel("Label:")); txtLabel = new JTextField(8); pnlCustom.add(txtLabel);
@@ -135,42 +125,70 @@ public class PlannerPanel extends JPanel {
 
         JPanel pnlAddBtn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
-        // --- EKLENEN KISIM BAŞLANGICI ---
         lblPreviewTotal = new JLabel("Preview total: 0.0 hours / $0.0");
         pnlAddBtn.add(lblPreviewTotal);
-        // --- EKLENEN KISIM BİTİŞİ ---
         
         btnAddSelected = new JButton("Add Selected Activities");
         pnlAddBtn.add(btnAddSelected);
         middleCol.add(pnlAddBtn, BorderLayout.SOUTH);
         add(middleCol);
 
-        // SINAV NOTU (COMMAND DESENİ - EKLEME):
-        // Kullanıcı ekle butonuna bastığında aktiviteler direkt listeye eklenmez!
-        // "AddActivityCommand" isminde bir komut nesnesine paketlenir ve yöneticiye (Invoker) verilir.
+        // SINAV NOTU (COMMAND DESENİ - DINAMIK EKLEME):
+        // Kullanıcı ekle butonuna bastığında aktiviteler ağaçta o an hangi composite (klasör) 
+        // seçiliyse onun altına eklenir. Hiçbir şey seçilmediyse Root'a eklenir.
         btnAddSelected.addActionListener(e -> {
             if (activePlan == null) {
                 JOptionPane.showMessageDialog(this, "Please select a city first!", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+
+            // Adım 1: Eklenecek hedef klasörü (Composite düğümü) buluyoruz
+            ActivityPlan targetPlan = activePlan;
+            DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) activityTree.getLastSelectedPathComponent();
+            if (selectedNode != null && selectedNode != rootTreeNode) {
+                Object userObj = selectedNode.getUserObject();
+                if (userObj instanceof ComponentNodeWrapper) {
+                    TravelComponent comp = ((ComponentNodeWrapper) userObj).getComponent();
+                    if (comp instanceof ActivityPlan) {
+                        targetPlan = (ActivityPlan) comp; // Seçili düğüm bir klasörse hedef odur
+                    } else {
+                        // Eğer seçili düğüm bir yaprak aktiviteyse, onun bağlı olduğu üst klasörü hedef seç
+                        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+                        if (parentNode != null && parentNode != rootTreeNode) {
+                            targetPlan = (ActivityPlan) ((ComponentNodeWrapper) parentNode.getUserObject()).getComponent();
+                        }
+                    }
+                }
+            }
+
+            // Adım 2: Seçili olan her aktiviteyi hedef klasöre Command ile ekle
+            boolean added = false;
             if (chkMuseum.isSelected()) {
-                commandManager.executeCommand(new AddActivityCommand(activePlan, new Activity("Visit Museum", 18.0, 2.0)));
+                commandManager.executeCommand(new AddActivityCommand(targetPlan, new Activity("Visit Museum", 18.0, 2.0)));
+                added = true;
             }
             if (chkCenter.isSelected()) {
-                commandManager.executeCommand(new AddActivityCommand(activePlan, new Activity("Visit City Center", 0.0, 1.5)));
+                commandManager.executeCommand(new AddActivityCommand(targetPlan, new Activity("Visit City Center", 0.0, 1.5)));
+                added = true;
             }
             if (chkShopping.isSelected()) {
-                commandManager.executeCommand(new AddActivityCommand(activePlan, new Activity("Visit Shopping Mall", 25.0, 2.0)));
+                commandManager.executeCommand(new AddActivityCommand(targetPlan, new Activity("Visit Shopping Mall", 25.0, 2.0)));
+                added = true;
             }
             if (chkPark.isSelected()) {
-                commandManager.executeCommand(new AddActivityCommand(activePlan, new Activity("Walk in the Park", 7.0, 1.0)));
+                commandManager.executeCommand(new AddActivityCommand(targetPlan, new Activity("Walk in the Park", 7.0, 1.0)));
+                added = true;
+            }
+
+            if (added) {
+                chkMuseum.setSelected(false); chkCenter.setSelected(false);
+                chkShopping.setSelected(false); chkPark.setSelected(false);
+                updatePreviewText();
             }
             refreshTreeUI(); 
         });
     }
 
-    // --- EKLENEN KISIM BAŞLANGICI ---
-    // Bu metot, ekrandaki her değişikliği (şehir seçimi veya checkbox tıklaması) anlık olarak "Plan Preview" ekranına çizer.
     private void updatePreviewText() {
         if (activePlan == null || currentCity == null) {
             txtPreview.setText("Please select a city from the left list first.");
@@ -181,7 +199,6 @@ public class PlannerPanel extends JPanel {
 
         String cityName = currentCity.getName();
         
-        // Hocanın ekranındaki "Preview for Islamabad | Weather: CLOUDY | Temp: 26.5°C" kısmı
         if (lblPreviewHeader != null) {
             lblPreviewHeader.setText("Preview for " + cityName + " | Weather: " + currentCity.getCurrentWeatherState() + " | Temp: " + currentCity.getCurrentTemperature() + "°C");
         }
@@ -235,7 +252,6 @@ public class PlannerPanel extends JPanel {
             lblPreviewTotal.setText("Preview total: " + totalHours + " hours / $" + totalCost);
         }
     }
-    // --- EKLENEN KISIM BİTİŞİ ---
 
     private void createRightColumn() {
         JPanel rightCol = new JPanel(new BorderLayout(5, 5));
@@ -248,9 +264,6 @@ public class PlannerPanel extends JPanel {
         btnAddPlanNode = new JButton("Add Plan Node"); pnlAddNode.add(btnAddPlanNode);
         rightCol.add(pnlAddNode, BorderLayout.NORTH);
 
-        // SINAV NOTU (COMPOSITE GÖRSELLEŞTİRME):
-        // Java'nın DefaultMutableTreeNode sınıfı, Component (Bileşen) tasarımını ekranda ağaç 
-        // dalları şeklinde göstermek için biçilmiş kaftandır.
         rootTreeNode = new DefaultMutableTreeNode("No City Selected");
         treeModel = new DefaultTreeModel(rootTreeNode);
         activityTree = new JTree(treeModel);
@@ -267,10 +280,40 @@ public class PlannerPanel extends JPanel {
         add(rightCol);
 
         // =====================================================================================
-        // SINAV NOTU (COMMAND DESENİ BUTONLARI):
-        // Bütün butonlar CommandManager üzerinden işlem yapar. Bu sayede "Geri Al" basıldığında
-        // Manager en son yapılan işlemi bilip iptal edebilir.
+        // --- ADDACTIONLISTENER ENTEGRASYONU (ADD PLAN NODE - COMPOSITE TETİKLEYİCİSİ) ---
         // =====================================================================================
+        btnAddPlanNode.addActionListener(e -> {
+            if (activePlan == null) {
+                JOptionPane.showMessageDialog(this, "Please select a city first!", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            String nodeName = txtPlanName.getText().trim();
+            if (nodeName.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter a plan name!", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Hangi alt klasör seçildiyse yeni planı onun içine oluştur, seçilmediyse ana plana (Root) ekle
+            ActivityPlan targetPlan = activePlan;
+            DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) activityTree.getLastSelectedPathComponent();
+            if (selectedNode != null && selectedNode != rootTreeNode) {
+                Object userObj = selectedNode.getUserObject();
+                if (userObj instanceof ComponentNodeWrapper) {
+                    TravelComponent comp = ((ComponentNodeWrapper) userObj).getComponent();
+                    if (comp instanceof ActivityPlan) {
+                        targetPlan = (ActivityPlan) comp;
+                    }
+                }
+            }
+
+            // Yeni alt plan klasörümüzü (Composite) Command deseniyle güvenli şekilde ekliyoruz
+            ActivityPlan subPlan = new ActivityPlan(nodeName);
+            commandManager.executeCommand(new AddActivityCommand(targetPlan, subPlan));
+            
+            txtPlanName.setText(""); // Kutuyu temizle
+            refreshTreeUI();         // Ağacı güncelle
+        });
 
         btnClear.addActionListener(e -> {
             if(activePlan != null) {
@@ -280,75 +323,101 @@ public class PlannerPanel extends JPanel {
         });
 
         btnUndo.addActionListener(e -> {
-            commandManager.undo(); // Stack (Yığın) mantığıyla son komutu siler
+            commandManager.undo();
             refreshTreeUI();
         });
 
         btnRedo.addActionListener(e -> {
-            commandManager.redo(); // Geri alınan işlemi ileri sarar
+            commandManager.redo();
             refreshTreeUI();
         });
         
+        // Derinlemesine klasörlerden güvenli silme operasyonu
         btnRemove.addActionListener(e -> {
             if (activePlan == null) return;
-            // JTree'den kullanıcının mavi renk ile tıkladığı (seçtiği) düğümü bulur
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) activityTree.getLastSelectedPathComponent();
             if (selectedNode != null && selectedNode != rootTreeNode) {
-                // Wrapper içinden orijinal nesneyi çıkar ve Remove Komutunu çalıştır
+                DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+                ActivityPlan parentPlan = activePlan;
+                if (parentNode != rootTreeNode) {
+                    parentPlan = (ActivityPlan) ((ComponentNodeWrapper) parentNode.getUserObject()).getComponent();
+                }
+                
                 TravelComponent comp = ((ComponentNodeWrapper) selectedNode.getUserObject()).getComponent();
-                commandManager.executeCommand(new RemoveActivityCommand(activePlan, comp));
+                commandManager.executeCommand(new RemoveActivityCommand(parentPlan, comp));
                 refreshTreeUI();
             }
         });
 
+        // Derinlemesine klasörlerden güvenli yukarı taşıma operasyonu
         btnMoveUp.addActionListener(e -> {
             if (activePlan == null) return;
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) activityTree.getLastSelectedPathComponent();
             if (selectedNode != null && selectedNode != rootTreeNode) {
-                int index = rootTreeNode.getIndex(selectedNode);
-                if (index > 0) { // Zaten en üstte değilse, sırasını 1 azalt (Yukarı kaydır)
-                    commandManager.executeCommand(new MoveActivityCommand(activePlan, index, index - 1));
+                DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+                int index = parentNode.getIndex(selectedNode);
+                if (index > 0) {
+                    ActivityPlan parentPlan = activePlan;
+                    if (parentNode != rootTreeNode) {
+                        parentPlan = (ActivityPlan) ((ComponentNodeWrapper) parentNode.getUserObject()).getComponent();
+                    }
+                    commandManager.executeCommand(new MoveActivityCommand(parentPlan, index, index - 1));
                     refreshTreeUI();
                 }
             }
         });
 
+        // Derinlemesine klasörlerden güvenli aşağı taşıma operasyonu
         btnMoveDown.addActionListener(e -> {
             if (activePlan == null) return;
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) activityTree.getLastSelectedPathComponent();
             if (selectedNode != null && selectedNode != rootTreeNode) {
-                int index = rootTreeNode.getIndex(selectedNode);
-                if (index >= 0 && index < rootTreeNode.getChildCount() - 1) { // En altta değilse, sırasını 1 artır
-                    commandManager.executeCommand(new MoveActivityCommand(activePlan, index, index + 1));
+                DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+                int index = parentNode.getIndex(selectedNode);
+                if (index >= 0 && index < parentNode.getChildCount() - 1) {
+                    ActivityPlan parentPlan = activePlan;
+                    if (parentNode != rootTreeNode) {
+                        parentPlan = (ActivityPlan) ((ComponentNodeWrapper) parentNode.getUserObject()).getComponent();
+                    }
+                    commandManager.executeCommand(new MoveActivityCommand(parentPlan, index, index + 1));
                     refreshTreeUI();
                 }
             }
         });
     }
 
+    // SINAV NOTU (RECURSIVE COMPOSITE TREE REFRESH):
+    // Klasörlerin içindeki alt klasörleri ve aktiviteleri sonsuz derinlikte 
+    // tarayıp ekrandaki JTree'ye hiyerarşik basan özyineli mimari.
     private void refreshTreeUI() {
         if (activePlan == null) return;
         
         rootTreeNode.removeAllChildren(); 
-        for (TravelComponent comp : activePlan.getComponents()) {
-            rootTreeNode.add(new DefaultMutableTreeNode(new ComponentNodeWrapper(comp)));
-        }
+        populateTreeNodes(rootTreeNode, activePlan); // Özyineli doldurmayı tetikle
         
-        // SINAV NOTU (POLİMORFİZM):
-        // activePlan.getTotalCost() dediğimiz an, Composite deseni sayesinde planın içindeki
-        // TÜM alt aktivitelerin (leaf) maliyetleri döngüyle otomatik toplanıp buraya gelir.
+        // Kök düğümün ismini ve toplam polimorfik maliyetlerini güncelle
         rootTreeNode.setUserObject(activePlan.getName() + " [" + activePlan.getTotalDuration() + " h, $" + activePlan.getTotalCost() + "]");
         treeModel.reload(); 
         
+        // Kullanıcı kolaylığı için tüm klasörleri otomatik genişlet (Açık getir)
         for (int i = 0; i < activityTree.getRowCount(); i++) {
             activityTree.expandRow(i);
         }
     }
 
-    // SINAV NOTU (WRAPPER - SARMALAYICI SINIF):
-    // Ekranda JTree ağacı string (metin) bekler ama biz Command yapabilmek için arka planda 
-    // Orijinal objeyi tutmak zorundayız. Bu sınıf, JTree'nin gözünü boyayıp ona metin gösterirken
-    // arka planda bizim asıl TravelComponent nesnemizi saklamamızı sağlar.
+    // Recursive (Özyineli) yardımcı fonksiyon
+    private void populateTreeNodes(DefaultMutableTreeNode uiNode, ActivityPlan compositePlan) {
+        for (TravelComponent comp : compositePlan.getComponents()) {
+            DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(new ComponentNodeWrapper(comp));
+            uiNode.add(childNode);
+            
+            // Eğer bu component bir alt plan (Klasör/Composite) ise, onun çocuklarını da içeriye tarayarak ekle
+            if (comp instanceof ActivityPlan) {
+                populateTreeNodes(childNode, (ActivityPlan) comp);
+            }
+        }
+    }
+
     private class ComponentNodeWrapper {
         private TravelComponent comp;
         public ComponentNodeWrapper(TravelComponent comp) { this.comp = comp; }
@@ -356,6 +425,9 @@ public class PlannerPanel extends JPanel {
         
         @Override
         public String toString() {
+            if (comp instanceof ActivityPlan) {
+                return comp.getName() + " [" + comp.getTotalDuration() + " h, $" + comp.getTotalCost() + "]";
+            }
             return comp.getName() + " [Cost: $" + comp.getTotalCost() + ", " + comp.getTotalDuration() + "h]";
         }
     }
