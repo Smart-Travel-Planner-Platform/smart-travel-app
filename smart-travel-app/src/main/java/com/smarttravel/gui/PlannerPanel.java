@@ -187,6 +187,52 @@ public class PlannerPanel extends JPanel {
             }
             refreshTreeUI(); 
         });
+
+        btnAddCustom.addActionListener(e -> {
+            if (activePlan == null) {
+                JOptionPane.showMessageDialog(this, "Please select a city first!", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            String label = txtLabel.getText().trim();
+            if (label.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter a label!", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            double cost;
+            double hours;
+            try {
+                cost = Double.parseDouble(txtCost.getText().trim());
+                hours = Double.parseDouble(txtHours.getText().trim());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter valid numbers for Cost and Hours!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            ActivityPlan targetPlan = activePlan;
+            DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) activityTree.getLastSelectedPathComponent();
+            if (selectedNode != null && selectedNode != rootTreeNode) {
+                Object userObj = selectedNode.getUserObject();
+                if (userObj instanceof ComponentNodeWrapper) {
+                    TravelComponent comp = ((ComponentNodeWrapper) userObj).getComponent();
+                    if (comp instanceof ActivityPlan) {
+                        targetPlan = (ActivityPlan) comp;
+                    } else {
+                        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+                        if (parentNode != null && parentNode != rootTreeNode) {
+                            targetPlan = (ActivityPlan) ((ComponentNodeWrapper) parentNode.getUserObject()).getComponent();
+                        }
+                    }
+                }
+            }
+
+            commandManager.executeCommand(new AddActivityCommand(targetPlan, new Activity(label, cost, hours)));
+            txtLabel.setText("");
+            txtCost.setText("");
+            txtHours.setText("");
+            refreshTreeUI();
+        });
     }
 
     private void updatePreviewText() {
@@ -303,6 +349,11 @@ public class PlannerPanel extends JPanel {
                     TravelComponent comp = ((ComponentNodeWrapper) userObj).getComponent();
                     if (comp instanceof ActivityPlan) {
                         targetPlan = (ActivityPlan) comp;
+                    } else {
+                        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+                        if (parentNode != null && parentNode != rootTreeNode) {
+                            targetPlan = (ActivityPlan) ((ComponentNodeWrapper) parentNode.getUserObject()).getComponent();
+                        }
                     }
                 }
             }
