@@ -187,7 +187,6 @@ public class PlannerPanel extends JPanel {
             }
             refreshTreeUI(); 
         });
-
         btnAddCustom.addActionListener(e -> {
             if (activePlan == null) {
                 JOptionPane.showMessageDialog(this, "Please select a city first!", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -203,10 +202,12 @@ public class PlannerPanel extends JPanel {
             double cost;
             double hours;
             try {
-                cost = Double.parseDouble(txtCost.getText().trim());
+                // Temizlik: Kullanıcı yanlışlıkla '$' işareti veya boşluk girerse temizle
+                String costStr = txtCost.getText().replace("$", "").trim();
+                cost = Double.parseDouble(costStr);
                 hours = Double.parseDouble(txtHours.getText().trim());
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Please enter valid numbers for Cost and Hours!", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Please enter valid numeric values for Cost and Hours (e.g. 30)!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
